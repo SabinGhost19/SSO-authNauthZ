@@ -1,0 +1,149 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: keycloak
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:26.0.7
+          args:
+            - "start"
+          env:
+            # admin credentials
+            - name: KEYCLOAK_ADMIN
+              value: "admin"
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-admin-secret
+                  key: admin-password
+
+            - name: KC_DB
+              value: "postgres"
+            - name: KC_DB_URL
+              value: "jdbc:postgresql://postgresql-keycloak-postgresql-chart.keycloak.svc.cluster.local:5432/keycloak"
+            - name: KC_DB_USERNAME
+              value: "keycloak"
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-postgresql-secret
+                  key: password
+
+            - name: KC_HOSTNAME
+              value: "https://keycloak-agent.ggdevs.site"
+            - name: KC_HOSTNAME_ADMIN
+              value: "https://keycloak-agent.ggdevs.site"
+
+            - name: KC_HOSTNAME_STRICT
+              value: "false"
+            - name: KC_HOSTNAME_BACKCHANNEL_DYNAMIC
+              value: "true"
+
+            - name: KC_PROXY_HEADERS
+              value: "xforwarded"
+            - name: KC_HTTP_ENABLED
+              value: "true"
+            - name: KC_HTTP_RELATIVE_PATH
+              value: "/"
+
+            - name: KC_HEALTH_ENABLED
+              value: "true"
+            - name: KC_METRICS_ENABLED
+              value: "true"
+
+            - name: KC_LOG_LEVEL
+              value: "INFO"
+
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: management
+              containerPort: 9000
+
+          # startupProbe:
+          #   httpGet:
+          #     path: /health/started
+          #     port: 8080
+          #   initialDelaySeconds: 30
+          #   periodSeconds: 10
+          #   failureThreshold: 30
+
+          # readinessProbe:
+          #   httpGet:
+          #     path: /health/ready
+          #     port: 8080
+          #   initialDelaySeconds: 10
+          #   periodSeconds: 10
+          #   timeoutSeconds: 5
+          #   failureThreshold: 3
+
+          # livenessProbe:
+          #   httpGet:
+          #     path: /health/live
+          #     port: 8080
+          #   initialDelaySeconds: 10
+          #   periodSeconds: 30
+          #   timeoutSeconds: 5
+          #   failureThreshold: 3
+
+          # resources:
+          #   requests:
+          #     cpu: 500m
+          #     memory: 512Mi
+          #   limits:
+          #     cpu: 1000m
+          #     memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  namespace: keycloak
+  labels:
+    app: keycloak
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+    - name: management
+      port: 9000
+      targetPort: 9000
+      protocol: TCP
+  selector:
+    app: keycloak
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: keycloak-ingress
+  namespace: keycloak
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  rules:
+    - host: keycloak-agent.ggdevs.site
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: keycloak
+                port:
+                  number: 8080

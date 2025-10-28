@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-nginx-zero-trust
+  namespace: test-app
+  labels:
+    app: test-nginx-zero-trust
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-nginx-zero-trust
+  template:
+    metadata:
+      labels:
+        app: test-nginx-zero-trust
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+              name: http
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /usr/share/nginx/html
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: nginx-content
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-content
+  namespace: test-app
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Zero Trust Test App</title>
+        <style>
+            body { font-family: Arial; margin: 40px; background: #f0f0f0; }
+            .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            .header { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+            .info { margin: 20px 0; padding: 15px; background: #ecf0f1; border-radius: 4px; }
+            .success { color: #27ae60; font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1 class="header"> Zero Trust Architecture - Test Application</h1>
+            <div class="info">
+                <p class="success">✓ Authentication successful!</p>
+                <p>You are accessing a secured application protected by:</p>
+                <ul>
+                    <li><strong>Keycloak OIDC</strong> - Identity Provider</li>
+                    <li><strong>OAuth2 Proxy</strong> - Authentication Gateway</li>
+                    <li><strong>Traefik</strong> - Ingress Controller</li>
+                </ul>
+            </div>
+            <div class="info">
+                <h3>Request Headers (from OAuth2 Proxy):</h3>
+                <p><strong>X-Auth-Request-User:</strong> <span id="user"></span></p>
+                <p><strong>X-Auth-Request-Email:</strong> <span id="email"></span></p>
+                <p><strong>X-Auth-Request-Groups:</strong> <span id="groups"></span></p>
+            </div>
+            <script>
+                // Headers vor fi setate de OAuth2 Proxy
+                document.getElementById('user').textContent = 'Check response headers';
+                document.getElementById('email').textContent = 'Check response headers';
+                document.getElementById('groups').textContent = 'Check response headers';
+            </script>
+        </div>
+    </body>
+    </html>

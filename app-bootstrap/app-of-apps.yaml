@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: apps-bootstrap-root-repo-authn-authz-stack
+spec:
+  destination:
+    namespace: argocd
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: "git@github.com:SabinGhost19/sso-authNauthZ-stack.git"
+    targetRevision: master
+    path: apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

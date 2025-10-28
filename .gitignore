@@ -1,0 +1,15 @@
+secrets/*.yaml
+secrets/*
+#!secrets/README.md
+
+jail/*
+
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# IDE
+.vscode/
+.idea/
+*.swp

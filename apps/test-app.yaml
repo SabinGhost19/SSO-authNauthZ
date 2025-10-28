@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: test-nginx-app
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: git@github.com:SabinGhost19/sso-authNauthZ-stack.git
+    targetRevision: master
+    path: apps/test-app
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: test-app
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

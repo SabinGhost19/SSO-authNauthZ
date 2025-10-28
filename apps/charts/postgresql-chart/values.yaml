@@ -1,0 +1,33 @@
+postgresql:
+  image:
+    repository: postgres
+    tag: "16.4-alpine"
+    pullPolicy: IfNotPresent
+
+  database: keycloak
+  username: keycloak
+
+  existingSecret: "keycloak-postgresql-secret"
+
+  service:
+    type: ClusterIP
+    port: 5432
+
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: "" # default storage class
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  securityContext:
+    runAsUser: 999
+    runAsGroup: 999
+    fsGroup: 999
+    runAsNonRoot: true

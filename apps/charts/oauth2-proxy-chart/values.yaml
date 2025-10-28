@@ -1,0 +1,49 @@
+config:
+  clientID: "oauth2-proxy"
+  clientSecret: "SECRET" #modify here
+  cookieSecret: "SECRET" #modify here
+  existingSecret: "oauth2-proxy"
+
+  configFile: |-
+    provider = "keycloak-oidc"
+    provider_display_name = "Keycloak"
+    redirect_url = "https://oauth2.ggdevs.site/oauth2/callback"  
+    oidc_issuer_url = "https://keycloak-agent.ggdevs.site/realms/zero-trust"
+
+    upstreams = ["static://202"]  
+
+    email_domains = ["*"]
+    cookie_domains = [".ggdevs.site"]  
+    whitelist_domains = [".ggdevs.site"]  
+
+    cookie_secure = false  
+    cookie_httponly = true
+    cookie_samesite = "lax"
+
+    skip_provider_button = true
+    set_xauthrequest = true
+    pass_access_token = true
+    pass_authorization_header = true
+    pass_user_headers = true
+
+    reverse_proxy = true
+    ssl_insecure_skip_verify = true 
+
+    scope = "openid profile email groups"
+
+service:
+  type: ClusterIP
+  portNumber: 4180
+
+ingress:
+  enabled: false
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+replicaCount: 1

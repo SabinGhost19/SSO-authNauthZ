@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: oauth2-proxy
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: git@github.com:SabinGhost19/sso-authNauthZ-stack.git
+    targetRevision: master
+    path: apps/charts/oauth2-proxy-chart/oauth2-proxy
+    helm:
+      valueFiles:
+        - ../values.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: oauth2-proxy
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
