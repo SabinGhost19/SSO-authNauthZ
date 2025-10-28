@@ -1,0 +1,151 @@
+{
+    "realm": "REALM_NAME",
+    "enabled": true,
+    "sslRequired": "external",
+    "registrationAllowed": false,
+    "loginWithEmailAllowed": true,
+    "duplicateEmailsAllowed": false,
+    "resetPasswordAllowed": true,
+    "editUsernameAllowed": false,
+    "bruteForceProtected": true,
+    "clients": [
+        {
+            "clientId": "oauth2-proxy",
+            "name": "OAuth2 Proxy Client",
+            "enabled": true,
+            "protocol": "openid-connect",
+            "publicClient": false,
+            "secret": "SECRET HERE",
+            "redirectUris": [
+                "http://app.ggdevs.site/oauth2/callback",
+                "http://oauth2.ggdevs.site/oauth2/callback"
+            ],
+            "webOrigins": [
+                "+"
+            ],
+            "standardFlowEnabled": true,
+            "directAccessGrantsEnabled": true,
+            "serviceAccountsEnabled": false,
+            "attributes": {
+                "access.token.lifespan": "300",
+                "client.secret.creation.time": "1234567890"
+            }
+        }
+    ],
+    "groups": [
+        {
+            "name": "admins",
+            "path": "/admins",
+            "attributes": {
+                "description": [
+                    "Administrator group with full access"
+                ]
+            },
+            "realmRoles": [
+                "admin"
+            ],
+            "clientRoles": {}
+        },
+        {
+            "name": "developers",
+            "path": "/developers",
+            "attributes": {
+                "description": [
+                    "Developer group with limited access"
+                ]
+            },
+            "realmRoles": [
+                "developer"
+            ],
+            "clientRoles": {}
+        }
+    ],
+    "roles": {
+        "realm": [
+            {
+                "name": "admin",
+                "description": "Administrator role with full permissions",
+                "composite": false
+            },
+            {
+                "name": "developer",
+                "description": "Developer role with read-only access",
+                "composite": false
+            }
+        ]
+    },
+    "users": [
+        {
+            "username": "admin",
+            "enabled": true,
+            "email": "admin@example.com",
+            "firstName": "Admin",
+            "lastName": "User",
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "PASSWORD_VALUE",
+                    "temporary": false
+                }
+            ],
+            "realmRoles": [
+                "admin"
+            ],
+            "groups": [
+                "/admins"
+            ]
+        },
+        {
+            "username": "developer",
+            "enabled": true,
+            "email": "dev@example.com",
+            "firstName": "Developer",
+            "lastName": "User",
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "PASSWORD_VALUE",
+                    "temporary": false
+                }
+            ],
+            "realmRoles": [
+                "developer"
+            ],
+            "groups": [
+                "/developers"
+            ]
+        }
+    ],
+    "clientScopes": [
+        {
+            "name": "groups",
+            "description": "Group membership information",
+            "protocol": "openid-connect",
+            "attributes": {
+                "include.in.token.scope": "true",
+                "display.on.consent.screen": "true"
+            },
+            "protocolMappers": [
+                {
+                    "name": "groups",
+                    "protocol": "openid-connect",
+                    "protocolMapper": "oidc-group-membership-mapper",
+                    "consentRequired": false,
+                    "config": {
+                        "full.path": "false",
+                        "id.token.claim": "true",
+                        "access.token.claim": "true",
+                        "claim.name": "groups",
+                        "userinfo.token.claim": "true"
+                    }
+                }
+            ]
+        }
+    ],
+    "defaultDefaultClientScopes": [
+        "role_list",
+        "profile",
+        "email",
+        "groups"
+    ]
+}

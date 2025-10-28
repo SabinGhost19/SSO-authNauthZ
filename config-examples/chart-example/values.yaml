@@ -1,0 +1,159 @@
+#parent chart --- configmap for realm import
+realmConfig:
+  enabled: true
+  importOnStartup: true
+
+# KeycloakX configuration
+keycloakx:
+  replicas: 1
+
+  image:
+    repository: quay.io/keycloak/keycloak
+    tag: "26.0.7"
+    pullPolicy: IfNotPresent
+
+  database:
+    vendor: postgres
+    hostname: postgresql-keycloak-postgresql-chart.keycloak.svc.cluster.local
+    port: 5432
+    database: keycloak
+    username: keycloak
+    existingSecret: keycloak-postgresql-secret
+    existingSecretPasswordKey: password
+
+  command:
+    - "/opt/keycloak/bin/kc.sh"
+
+  args:
+    - "start"
+    - "--http-enabled=true"
+    - "--http-port=8080"
+    - "--hostname=https://keycloak-agent.ggdevs.site"
+    - "--hostname-strict=false"
+    - "--proxy-headers=xforwarded"
+    - "--import-realm"
+    - "--optimized"
+
+  extraEnv: |
+    - name: KEYCLOAK_ADMIN
+      value: admin
+    - name: KEYCLOAK_ADMIN_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: keycloak-admin-secret
+          key: admin-password
+    - name: KC_HTTP_RELATIVE_PATH
+      value: "/auth"
+    - name: KC_LOG_LEVEL
+      value: INFO
+    - name: KC_CACHE
+      value: "local"
+    - name: KC_CACHE_STACK
+      value: "local"
+    - name: JAVA_OPTS_APPEND
+      value: "-Dkeycloak.profile.feature.upload_scripts=enabled -Xms512m -Xmx1536m"
+
+  extraVolumes: |
+    - name: realm-config
+      configMap:
+        name: keycloakx-realm-config
+
+  extraVolumeMounts: |
+    - name: realm-config
+      mountPath: /opt/keycloak/data/import
+      readOnly: true
+
+  service:
+    type: ClusterIP
+    httpPort: 8080
+    httpsPort: 8443
+    annotations: {}
+
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: web
+    rules:
+      - host: keycloak-agent.ggdevs.site
+        paths:
+          - path: /
+            pathType: Prefix
+
+  startupProbe: null
+  readinessProbe: null
+  livenessProbe: null
+  # startupProbe: |
+  #   httpGet:
+  #     path: /auth/realms/master
+  #     port: 8080
+  #   initialDelaySeconds: 90
+  #   timeoutSeconds: 5
+  #   periodSeconds: 10
+  #   failureThreshold: 60
+
+  # readinessProbe: |
+  #   httpGet:
+  #     path: /auth/realms/master
+  #     port: 8080
+  #   initialDelaySeconds: 90
+  #   timeoutSeconds: 5
+  #   periodSeconds: 10
+  #   failureThreshold: 3
+
+  # livenessProbe: |
+  #   httpGet:
+  #     path: /auth/realms/master
+  #     port: 8080
+  #   initialDelaySeconds: 90
+  #   timeoutSeconds: 5
+  #   periodSeconds: 15
+  #   failureThreshold: 5
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+    runAsNonRoot: true
+
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    runAsNonRoot: true
+    runAsUser: 1000
+    capabilities:
+      drop:
+        - ALL
+
+  dbchecker:
+    enabled: true
+    image:
+      repository: docker.io/busybox
+      tag: "1.36"
+    resources:
+      requests:
+        cpu: 10m
+        memory: 16Mi
+      limits:
+        cpu: 20m
+        memory: 32Mi
+
+  affinity: |
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                    - keycloakx
+            topologyKey: kubernetes.io/hostname
