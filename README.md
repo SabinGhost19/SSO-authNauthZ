@@ -11,6 +11,8 @@ Configuration examples: /config-examples
 This project implements GitOps principles using ArgoCD with the App of Apps pattern for declarative Kubernetes deployments
 A single root ArgoCD application manages all infrastructure components as child applications. Each component is defined as an independent ArgoCD application.
 
+
+
 ---
 ![integrated](/assets/integrated.png)
 
@@ -56,6 +58,16 @@ A single root ArgoCD application manages all infrastructure components as child 
 -  **Flexibility** - Support for MFA, RBAC, multiple providers
 
 ---
+## OpenID Connect vs OAuth 2.0
+
+OAuth 2.0 handles authorization (what you can access) via access tokens but doesn't identify users. OpenID Connect adds authentication (who you are) by extending OAuth 2.0 with ID tokens containing user identity.
+
+OAuth 2.0 provides authorization only. OIDC provides both authentication and authorization. An OIDC flow returns an ID token (user identity) and an access token (resource access), enabling both authN and authZ in one protocol.
+
+Use OIDC for login and SSO. Use OAuth 2.0 alone only for API access without user identity.
+
+In this project, Keycloak is the OIDC provider and OAuth2 Proxy validates tokens for authentication and authorization
+
 
 # OAuth2 Proxy ~ Keycloak ~ Kubernetes
 
@@ -63,14 +75,6 @@ A deep-dive into OAuth2 Proxy, Keycloak, and their deployment patterns in Kubern
 
 ---
 
-##  Table of Contents
-
-- [OAuth2 Proxy](#-oauth2-proxy)
-- [Keycloak](#-keycloak)
-- [OAuth2 Proxy + Keycloak Combined](#-oauth2-proxy--keycloak-combined)
-- [Kubernetes Deployment](#-kubernetes-deployment)
-
----
 
 ## OAuth2 Proxy
 
